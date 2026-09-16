@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Abriendo tu zona de descargas…</title>
+<style>
+  body{margin:0;background:#0a0f0a;color:#e9f5ec;font-family:Arial,Helvetica,sans-serif;
+       display:flex;min-height:100vh;align-items:center;justify-content:center;text-align:center}
+  .c{padding:28px}
+  .t{font-size:22px;font-weight:900;color:#3cff91;margin-bottom:8px}
+  .s{font-size:14px;color:#9aa0a6}
+  a{color:#3cff91}
+</style>
+</head>
+<body>
+<div class="c">
+  <div class="t">✓ Pago confirmado</div>
+  <div class="s">Abriendo tu zona de descargas…</div>
+  <p class="s">Si no abre sola, <a id="ir" href="../">toca aquí</a>.</p>
+</div>
+<script>
+/* Puente entre Stripe y la zona de descargas.
+   Stripe manda ?z=<zona>&v=<monto>&s=<sesion>. Aqui se dispara el Purchase de
+   Meta (antes vivia en /gracias/) y despues se manda al comprador a su zona.
+   z se valida contra una lista blanca: nadie puede usar esta pagina para
+   redirigir a otro sitio. */
+(function () {
+  "use strict";
+  var ZONAS = ["r7m2", "k9w4", "p3z8", "u6q1", "m7x2", "g4t9"];
+  var PIXEL = "1076125914843182";
+  var PISO = 9.99;
+
+  function q(n) { try { return new URLSearchParams(location.search).get(n) || ""; } catch (e) { return ""; } }
+
+  var z = q("z");
+  if (ZONAS.indexOf(z) === -1) { z = ""; }
+  var destino = z ? ("../" + z + "/") : "../";
+  document.getElementById("ir").href = destino;
+
+  var v = parseFloat(q("v"));
+  if (!isFinite(v) || v <= 0 || v > 1000) { v = PISO; }
+
+  var yaFue = false;
+  try {
+    var k = "pur_" + (q("s") || z || "x");
+    if (sessionStorage.getItem(k)) { yaFue = true; } else { sessionStorage.setItem(k, "1"); }
+  } catch (e) {}
+
+  if (!yaFue) {
+    !function (f, b, e, v2, n, t, s) {
+      if (f.fbq) return; n = f.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments) };
+      if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = "2.0"; n.queue = [];
+      t = b.createElement(e); t.async = !0; t.src = v2;
+      s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s);
+    }(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
+    fbq("init", PIXEL);
+    fbq("track", "PageView");
+    fbq("track", "Purchase", { value: v, currency: "USD" });
+  }
+
+  setTimeout(function () { location.replace(destino); }, 900);
+})();
+</script>
+</body>
+</html>
