@@ -25,7 +25,12 @@
    Stripe manda ?z=<zona>&v=<monto>&s=<sesion>. Aqui se dispara el Purchase de
    Meta (antes vivia en /gracias/) y despues se manda al comprador a su zona.
    z se valida contra una lista blanca: nadie puede usar esta pagina para
-   redirigir a otro sitio. */
+   redirigir a otro sitio.
+   14-oct: el Purchase lleva eventID = sesion de Stripe (s), para que Meta
+   funda este aviso con el del servidor y no cuente la venta dos veces.
+   Sin PageView: esta pagina es un puente, no una pagina.
+   La moneda sigue fija en USD: Stripe no expone la moneda en el success_url;
+   la moneda real la manda el emisor de servidor con el mismo eventID. */
 (function () {
   "use strict";
   var ZONAS = ["r7m2", "k9w4", "p3z8", "u6q1", "m7x2", "g4t9"];
@@ -56,8 +61,12 @@
       s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s);
     }(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
     fbq("init", PIXEL);
-    fbq("track", "PageView");
-    fbq("track", "Purchase", { value: v, currency: "USD" });
+    var sid = q("s");
+    if (sid) {
+      fbq("track", "Purchase", { value: v, currency: "USD" }, { eventID: sid });
+    } else {
+      fbq("track", "Purchase", { value: v, currency: "USD" });
+    }
   }
 
   setTimeout(function () { location.replace(destino); }, 900);
